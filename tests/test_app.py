@@ -1,8 +1,10 @@
+import hashlib
 import re
 import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from app import create_app
 
@@ -44,6 +46,17 @@ class SNSTest(unittest.TestCase):
         duplicate = self.register(self.bob, 'ALICE')
         self.assertIn('すでに使われています', duplicate.get_data(as_text=True))
         self.assertEqual(self.count('users'), 1)
+
+    def test_registration_and_login_without_scrypt(self):
+        # Apple's bundled Python can lack hashlib.scrypt.
+        with patch.object(hashlib, 'scrypt', create=True):
+            del hashlib.scrypt
+            self.assertIn('ようこそ', self.register(self.alice, 'alice').get_data(as_text=True))
+            self.submit(self.alice, '/logout')
+            invalid = self.submit(self.alice, '/login', {'username': 'alice', 'password': 'wrong'})
+            self.assertIn('パスワードが違います', invalid.get_data(as_text=True))
+            valid = self.submit(self.alice, '/login', {'username': 'alice', 'password': 'testpass123'})
+            self.assertIn('マイプロフィール', valid.get_data(as_text=True))
 
     def test_posts_following_likes_profiles_and_delete(self):
         self.register(self.alice, 'alice')

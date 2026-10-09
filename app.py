@@ -135,7 +135,7 @@ def create_app(config=None):
             else:
                 try:
                     cursor = db().execute('INSERT INTO users(username,display_name,password_hash) VALUES(?,?,?)',
-                                          (username, display_name, generate_password_hash(password)))
+                                          (username, display_name, generate_password_hash(password, method='pbkdf2:sha256:1000000')))
                     db().commit()
                 except sqlite3.IntegrityError:
                     flash('このユーザー名はすでに使われています。', 'error')
