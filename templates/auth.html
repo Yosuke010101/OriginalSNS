@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}{{ 'アカウントを作成' if signup else 'ログイン' }}{% endblock %}
+{% block content %}
+<section class="auth-card"><span class="eyebrow">{{ 'NICE TO MEET YOU' if signup else 'WELCOME BACK' }}</span><h1>{{ 'はじめまして。' if signup else 'おかえりなさい。' }}</h1><p class="muted">{{ 'あなただけのアカウントで、つながりをはじめよう。' if signup else '今日のひとことを、届けよう。' }}</p>
+<form method="post"><input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+{% if signup %}<label for="display_name">表示名</label><input id="display_name" name="display_name" required maxlength="40" autocomplete="nickname" placeholder="木漏れ日 はな" value="{{ request.form.get('display_name', '') }}">{% endif %}
+<label for="username">ユーザー名</label><input id="username" name="username" required minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" autocomplete="username" placeholder="komorebi_hana" value="{{ request.form.get('username', '') }}">
+{% if signup %}<small>半角英数字と _、3〜24文字。他の人にも公開されます。</small>{% endif %}
+<label for="password">パスワード</label><input id="password" name="password" type="password" required {% if signup %}minlength="8"{% endif %} maxlength="128" autocomplete="{{ 'new-password' if signup else 'current-password' }}" placeholder="{{ '8文字以上' if signup else 'パスワードを入力' }}">
+<button class="button">{{ 'アカウントを作成 ↗' if signup else 'ログイン ↗' }}</button></form>
+<p class="auth-switch">{{ 'すでにアカウントをお持ちですか？' if signup else 'はじめての方はこちら' }} <a href="{{ url_for('login' if signup else 'signup') }}">{{ 'ログイン' if signup else 'アカウントを作成' }}</a></p>
+</section>
+{% endblock %}

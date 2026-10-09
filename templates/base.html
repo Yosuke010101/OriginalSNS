@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="日々のひとことから、人とつながるSNS。">
+  <title>{% block title %}タイムライン{% endblock %} · komorebi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">コンテンツへ移動</a>
+<header class="mobile-header"><a class="brand" href="{{ url_for('home') }}"><span class="brand-icon">k<span>✳</span></span>komorebi</a></header>
+<div class="shell">
+  <aside class="navigation">
+    <a class="brand" href="{{ url_for('home') }}"><span class="brand-icon">k<span>✳</span></span>komorebi</a>
+    <p class="tagline">ひとことから、つながろう。</p>
+    <nav aria-label="メインナビゲーション">
+      <a class="nav-item {% if request.endpoint == 'home' %}active{% endif %}" href="{{ url_for('home') }}"><span>⌂</span>タイムライン</a>
+      {% if g.user %}
+      <a class="nav-item {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile', username=g.user.username) }}"><span>◉</span>マイプロフィール</a>
+      <a class="button nav-post" href="{{ url_for('home') }}#composer">＋ 投稿する</a>
+      {% else %}
+      <a class="nav-item" href="{{ url_for('login') }}"><span>↗</span>ログイン</a>
+      <a class="button nav-post" href="{{ url_for('signup') }}">アカウントを作成</a>
+      {% endif %}
+    </nav>
+    <div class="nav-bottom">
+      {% if g.user %}
+      <a class="identity" href="{{ url_for('profile', username=g.user.username) }}"><span class="avatar">{{ g.user.display_name[0] }}</span><span><strong>{{ g.user.display_name }}</strong><small>@{{ g.user.username }}</small></span></a>
+      <form action="{{ url_for('logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ session.csrf_token }}"><button class="logout">ログアウト ↗</button></form>
+      {% endif %}
+      <p class="copyright">© 2026 komorebi</p>
+    </div>
+  </aside>
+  <main id="main">
+    {% for category, message in get_flashed_messages(with_categories=True) %}<div class="notice {{ category }}" role="status">{{ message }}</div>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  {% block sidebar %}{% endblock %}
+</div>
+</body>
+</html>

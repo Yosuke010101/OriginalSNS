@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}{% if profile_user %}{{ profile_user.display_name }}{% else %}タイムライン{% endif %}{% endblock %}
+{% macro return_fields() %}<input type="hidden" name="csrf_token" value="{{ session.csrf_token }}"><input type="hidden" name="feed" value="{{ feed }}">{% if profile_user %}<input type="hidden" name="profile" value="{{ profile_user.username }}">{% endif %}{% endmacro %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">YOUR DAILY CONNECTIONS</span><h1>{% if profile_user %}プロフィール{% else %}タイムライン{% endif %}</h1></div><span class="heading-symbol">✳</span></div>
+{% if profile_user %}
+<section class="profile-card">
+  <div class="profile-cover"><span>小さなことば、大きなつながり。</span><span>✳</span></div>
+  <div class="profile-info"><span class="avatar large">{{ profile_user.display_name[0] }}</span><h2>{{ profile_user.display_name }}</h2><p class="muted">@{{ profile_user.username }}</p>
+  <p class="stats"><strong>{{ profile_user.post_count }}</strong> 投稿 <strong>{{ profile_user.following_count }}</strong> フォロー <strong>{{ profile_user.follower_count }}</strong> フォロワー</p>
+  {% if g.user and g.user.id != profile_user.id %}<form action="{{ url_for('follow', user_id=profile_user.id) }}" method="post">{{ return_fields() }}<button class="button {% if profile_user.followed %}secondary{% endif %}">{{ 'フォロー中 ✓' if profile_user.followed else 'フォローする ＋' }}</button></form>{% endif %}
+  </div>
+</section>
+{% else %}
+{% if g.user %}
+<section class="composer" id="composer">
+  <span class="avatar">{{ g.user.display_name[0] }}</span>
+  <form action="{{ url_for('post') }}" method="post">{{ return_fields() }}
+    <label class="sr-only" for="body">投稿内容</label><textarea id="body" name="body" maxlength="280" placeholder="今日は、どんな一日？" required rows="3"></textarea>
+    <div class="composer-footer"><span class="composer-hint">日常のひとこまを、ことばに。</span><span id="counter" aria-live="polite">0 / 280</span><button class="button" type="submit">投稿する ↗</button></div>
+  </form>
+</section>
+{% else %}
+<section class="welcome"><span class="eyebrow">WELCOME TO KOMOREBI</span><h2>あなたのひとことが、<br>誰かの毎日につながる。</h2><p>何気ない発見も、好きなことも。<br>ここで、気軽にシェアしてみませんか。</p><a class="button" href="{{ url_for('signup') }}">はじめてみる ↗</a><a class="text-link" href="{{ url_for('login') }}">ログイン</a><span class="welcome-flower">✳</span></section>
+{% endif %}
+<div class="tabs"><a class="{{ 'selected' if feed == 'all' }}" href="{{ url_for('home') }}">みんなの投稿</a>{% if g.user %}<a class="{{ 'selected' if feed == 'following' }}" href="{{ url_for('home', feed='following') }}">フォロー中</a>{% endif %}<span>最新のひとこと</span></div>
+{% endif %}
+<section class="posts" aria-label="投稿一覧">
+{% for post in posts %}
+<article class="post-card">
+  <a href="{{ url_for('profile', username=post.username) }}" class="avatar tone-{{ post.user_id % 4 }}" aria-label="{{ post.display_name }}のプロフィール">{{ post.display_name[0] }}</a>
+  <div class="post-content"><div class="post-meta"><a href="{{ url_for('profile', username=post.username) }}"><strong>{{ post.display_name }}</strong><span>@{{ post.username }}</span></a><time datetime="{{ post.created_at }}">{{ post.created_at[:10] }}</time></div>
+  <p class="post-body">{{ post.body }}</p>
+  <div class="post-actions">
+    {% if g.user %}<form action="{{ url_for('like', post_id=post.id) }}" method="post">{{ return_fields() }}<button class="like {{ 'liked' if post.liked }}" aria-pressed="{{ 'true' if post.liked else 'false' }}" aria-label="{{ 'いいねを取り消す' if post.liked else 'いいねする' }}"><span>{{ '♥' if post.liked else '♡' }}</span> {{ post.like_count }}</button></form>{% else %}<a class="like" href="{{ url_for('login') }}" aria-label="ログインしていいねする"><span>♡</span> {{ post.like_count }}</a>{% endif %}
+    {% if g.user and g.user.id == post.user_id %}<form class="delete-form" action="{{ url_for('delete_post', post_id=post.id) }}" method="post">{{ return_fields() }}<button class="delete">削除</button></form>{% endif %}
+  </div></div>
+</article>
+{% else %}
+<div class="empty"><span>☀</span><h2>{{ 'つながりを見つけよう' if feed == 'following' else 'ここから、はじまる。' }}</h2><p>{{ '気になる人をフォローして、投稿を読んでみましょう。' if feed == 'following' else 'まだ投稿はありません。最初のひとことを届けてみませんか。' }}</p></div>
+{% endfor %}
+</section><p class="feed-end">✳ ひとことずつ、つながっていく。</p>
+{% endblock %}
+{% block sidebar %}
+<aside class="right-sidebar"><section class="about-card"><span class="eyebrow">A LITTLE SPACE FOR YOU</span><h2>ふだんの毎日に、<br>ちょっとしたつながりを。</h2><p>好きなもの、今日の発見、<br>ふと思ったこと。あなたのペースで。</p><div class="art" aria-hidden="true"><span class="sun">✳</span><span class="hill one"></span><span class="hill two"></span><span class="hill three"></span></div></section>
+<section class="people-card"><h3>人とつながる <span>↗</span></h3>{% for person in people %}<div class="person"><a class="identity" href="{{ url_for('profile', username=person.username) }}"><span class="avatar small tone-{{ person.id % 4 }}">{{ person.display_name[0] }}</span><span><strong>{{ person.display_name }}</strong><small>@{{ person.username }}</small></span></a>{% if g.user %}<form action="{{ url_for('follow', user_id=person.id) }}" method="post">{{ return_fields() }}<button class="follow-small" aria-label="{{ person.display_name }}を{{ 'フォロー解除' if person.followed else 'フォロー' }}">{{ '✓' if person.followed else '＋' }}</button></form>{% endif %}</div>{% else %}<p class="muted">ここで新しいつながりを<br>見つけていきましょう。</p>{% endfor %}</section>
+<div class="sidebar-note"><span>✦</span><p>違う考えにも、思いやりを。<br>気持ちよく話せる場所にしましょう。</p></div>
+</aside>
+{% endblock %}
