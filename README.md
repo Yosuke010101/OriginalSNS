@@ -13,7 +13,7 @@ Flask + SQLite で動く日本語の短文SNSです。登録済みのアカウ�
 
 ## 開発環境
 
-Python 3.12で動作確認しています。外部API、Node.js、DBサーバーは不要です。
+Python 3.9と3.12で依存関係の導入とテストを確認しています。外部API、Node.js、DBサーバーは不要です。
 
 ```sh
 cd /workspace/OriginalSNS
@@ -23,7 +23,20 @@ python -m venv .venv
 .venv/bin/python app.py
 ```
 
-既存の`.venv`は再作成せず再利用できます。開発サーバーはポート5000で起動します（`PORT`で変更可能）。停止はCtrl+Cです。ヘルス確認は`curl -fsS http://127.0.0.1:5000/`で行えます。画面からアカウントを作成して投稿してください。
+既存の`.venv`は再作成せず再利用できます。
+
+Macで親フォルダ`SNS開発`に`.venv`を作成済みの場合は、次の手順で取得・起動できます。
+
+```sh
+cd "/Users/hw24a111/Desktop/SNS開発/OriginalSNS"
+git pull --ff-only
+../.venv/bin/python -m pip install -r requirements.txt
+../.venv/bin/python app.py
+```
+
+`click==8.5.0`に関するエラーが出た古いチェックアウトは、`git pull --ff-only`でPython 3.9対応の依存関係に更新してください。インストールに失敗した場合は、そのエラーを解消してから起動してください。
+
+開発サーバーはポート5000で起動します（`PORT`で変更可能）。停止はCtrl+Cです。ヘルス確認は`curl -fsS http://127.0.0.1:5000/`で行えます。画面からアカウントを作成して投稿してください。
 
 ## データと設定
 
